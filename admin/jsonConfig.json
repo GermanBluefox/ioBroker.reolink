@@ -43,6 +43,7 @@
                     "label": "Validate SSL certificate"
                 },
                 "cameraChannel": {
+                    "newLine": true,
                     "type": "number",
                     "xs": 12,
                     "sm": 12,
@@ -73,6 +74,7 @@
                     "label": "Password"
                 },
                 "UriEncodedPassword": {
+                    "hidden": "!data.cameraPassword",
                     "type": "checkbox",
                     "xs": 12,
                     "sm": 12,

@@ -29,7 +29,6 @@ class ReoLinkCamAdapter extends Adapter {
     private refreshIntervalRecordingTimer = 0;
     private apiConnected = false;
     private reolinkApiClient: AxiosInstance | null = null;
-    private cameraModel = null;
     private refreshStateTimeout: ioBroker.Timeout | undefined = undefined;
 
     constructor(options?: Partial<AdapterOptions>) {
@@ -40,7 +39,6 @@ class ReoLinkCamAdapter extends Adapter {
 
         this.on('ready', this.onReady.bind(this));
         this.on('stateChange', this.onStateChange.bind(this));
-        // this.on("objectChange", this.onObjectChange.bind(this));
         this.on('message', this.onMessage.bind(this));
         this.on('unload', this.onUnload.bind(this));
     }
@@ -62,8 +60,8 @@ class ReoLinkCamAdapter extends Adapter {
             urlString += `channel=${this.config.cameraChannel}&`;
         }
         if (genRndSeed === true) {
-            const randomseed = Math.round(Math.random() * 10000000000000000000).toString(16);
-            urlString += `rs=${randomseed}&`;
+            const randomSeed = Math.round(Math.random() * 100000000000000).toString(16);
+            urlString += `rs=${randomSeed}&`;
         }
         urlString += `user=${this.config.cameraUser}&password=${password}`;
         return urlString;
@@ -88,7 +86,10 @@ class ReoLinkCamAdapter extends Adapter {
         this.sslValidation = this.config.sslvalid ?? false;
 
         this.reolinkApiClient = axios.create({
-            baseURL: `${this.config.cameraProtocol}://${this.config.cameraIp}`,
+            baseURL:
+                this.config.cameraIp.startsWith('http://') || this.config.cameraIp.startsWith('https://')
+                    ? this.config.cameraIp
+                    : `${this.config.cameraProtocol}://${this.config.cameraIp}`,
             timeout: 4000,
             responseType: 'json',
             responseEncoding: 'binary',
@@ -104,10 +105,12 @@ class ReoLinkCamAdapter extends Adapter {
             ack: true,
         });
 
-        // first API Call...if something isn't working stop Adapter
-        await this.getDevinfo().catch(error => {
+        // first API Call...if something isn't working, stop Adapter
+        try {
+            await this.getDevInfo();
+        } catch (error) {
             this.log.error(`${error}: ${error.code}`);
-        });
+        }
 
         if (!this.apiConnected) {
             return;
@@ -352,7 +355,7 @@ class ReoLinkCamAdapter extends Adapter {
     }
 
     //function for getting general information of camera device
-    async getDevinfo(): Promise<void> {
+    async getDevInfo(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
                 this.log.debug('getDevinfo');

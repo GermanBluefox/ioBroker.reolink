@@ -39,6 +39,7 @@ export type ReolinkCommandName =
     | 'SetRecV20'
     | 'SetWhiteLed'
     | 'Reboot'
+    | 'Login'
     | 'Snap'
     | 'StartZoomFocus'
     | 'setPtzGuard';
@@ -209,6 +210,10 @@ export type ReolinkCommandSetEmailV20 = {
         };
     };
 };
+export type ReolinkCommandLogin = {
+    cmd: 'Login';
+    param: { User: { Version: '0'; userName: string; password: string } };
+};
 
 export type ReolinkCommand =
     | ReolinkCommandPtzControl
@@ -225,4 +230,5 @@ export type ReolinkCommand =
     | ReolinkCommandGetWhiteLed
     | ReolinkCommandSetPtzGuard
     | ReolinkCommandSetEmailV20
+    | ReolinkCommandLogin
     | ReolinkCommandSetAutoFocus;
