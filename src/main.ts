@@ -1,5 +1,5 @@
 import { Adapter, type AdapterOptions } from '@iobroker/adapter-core';
-import axios, { type AxiosInstance } from 'axios';
+import axios, { type AxiosError, type AxiosInstance } from 'axios';
 import https from 'node:https';
 import type {
     ReoLinkCamAdapterConfig,
@@ -20,7 +20,92 @@ import type {
     ReolinkCommandSetRec,
     ReolinkCommandSetWhiteLed,
     ReolinkCommandStartZoomFocus,
+    ReolinkResponseError,
 } from './types';
+
+// typescript
+export const ReolinkErrorMessages: Record<number, string> = {
+    [-1]: 'Missing parameters',
+    [-2]: 'Used up memory',
+    [-3]: 'Check error',
+    [-4]: 'Parameters error',
+    [-5]: 'Reached the max session number.',
+    [-6]: 'Login required',
+    [-7]: 'Login error',
+    [-8]: 'Operation timeout',
+    [-9]: 'Not supported',
+    [-10]: 'Protocol error',
+    [-11]: 'Failed to read operation',
+    [-12]: 'Failed to get configuration.',
+    [-13]: 'Failed to set configuration.',
+    [-14]: 'Failed to apply for memory',
+    [-15]: 'Failed to created socket',
+    [-16]: 'Failed to send data',
+    [-17]: 'Failed to receiver data',
+    [-18]: 'Failed to open file',
+    [-19]: 'Failed to read file',
+    [-20]: 'Failed to write file',
+    [-21]: 'Token error',
+    [-22]: 'The length of the string exceeds the limit.',
+    [-23]: 'Missing parameters',
+    [-24]: 'Command error',
+    [-25]: 'Internal error',
+    [-26]: 'Ability error',
+    [-27]: 'Invalid user',
+    [-28]: 'User already exist',
+    [-29]: 'Reached the maximum number of users',
+    [-30]: 'The version is identical to the current one.',
+    [-31]: 'Ensure only one user can upgrade',
+    [-32]: 'Modify IP conflicted with used IP',
+    [-34]: 'Cloud login need bind email first',
+    [-35]: 'Cloud login unbind camera',
+    [-36]: 'Cloud login get login information out of time',
+    [-37]: 'Cloud login password error',
+    [-38]: 'Cloud bind camera uid error',
+    [-39]: 'Cloud login user doesn’t exist',
+    [-40]: 'Cloud unbind camera failed',
+    [-41]: 'The device doesn’t support cloud',
+    [-42]: 'Cloud login server failed',
+    [-43]: 'Cloud bind camera failed',
+    [-44]: 'Cloud unknown error',
+    [-45]: 'Cloud bind camera need verify code',
+    [-46]: 'An error occurred while using the digest authentication process',
+    [-47]: 'An expired nonce is used in the authentication process',
+    [-48]: 'Snap a picture failed',
+    [-49]: 'Channel is invalid',
+    [-99]: 'Device offline',
+    [-100]: 'Test Email、Ftp、WiFi failed',
+    [-101]: 'Upgrade checking firmware failed',
+    [-102]: 'Upgrade download online failed',
+    [-103]: 'Upgrade get upgrade status failed',
+    [-105]: 'Frequent logins, please try again later!',
+    [-220]: 'Error downloading video file',
+    [-221]: 'Busy video recording task',
+    [-222]: 'The video file does not exist',
+    [-301]: 'Digest Authentication nonce error',
+    [-310]: 'Aes decryption failure',
+    [-451]: 'ftp test login failed',
+    [-452]: 'Create ftp dir failed',
+    [-453]: 'Upload ftp file failed',
+    [-454]: 'Cannot connect ftp server',
+    [-480]: 'Some undefined errors',
+    [-481]: 'Cannot connect email server',
+    [-482]: 'Auth user failed',
+    [-483]: 'Email network err',
+    [-484]: 'Something wrong with email server',
+    [-485]: 'Something wrong with memory',
+    [-500]: 'The number of IP addresses reaches the upper limit',
+    [-501]: 'The user does not exist',
+    [-502]: 'Password err',
+    [-503]: 'Login deny',
+    [-505]: 'Login not init',
+    [-506]: 'Login locked',
+    [-507]: 'The number of logins reached the upper limit',
+};
+
+export function getReolinkErrorMessage(code: number): string {
+    return ReolinkErrorMessages[code] ?? `Unknown error ${code}`;
+}
 
 class ReoLinkCamAdapter extends Adapter {
     declare config: ReoLinkCamAdapterConfig;
@@ -354,25 +439,25 @@ class ReoLinkCamAdapter extends Adapter {
         await this.getAiCfg();
     }
 
-    //function for getting general information of camera device
+    // function for getting general information of camera device
     async getDevInfo(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
                 this.log.debug('getDevinfo');
                 // cmd, channel, user, password
-                const DevInfoValues = await this.reolinkApiClient.get(this.genUrl('GetDevInfo', false, true));
+                const devInfoValues = await this.reolinkApiClient.get(this.genUrl('GetDevInfo', false, true));
                 this.log.debug(
-                    `camMdStateInfo ${JSON.stringify(DevInfoValues.status)}: ${JSON.stringify(DevInfoValues.data)}`,
+                    `camMdStateInfo ${JSON.stringify(devInfoValues.status)}: ${JSON.stringify(devInfoValues.data)}`,
                 );
 
-                if (DevInfoValues.status === 200) {
+                if (devInfoValues.status === 200) {
                     await this.setStateAsync('info.connection', true, true);
                     this.apiConnected = true;
                     await this.setStateAsync('network.connected', {
                         val: this.apiConnected,
                         ack: true,
                     });
-                    const DevValues = DevInfoValues.data[0];
+                    const DevValues = devInfoValues.data[0];
 
                     await this.setStateAsync('device.buildDay', {
                         val: DevValues.value.DevInfo.buildDay,
@@ -413,6 +498,10 @@ class ReoLinkCamAdapter extends Adapter {
                 }
             } catch (error) {
                 await this.setStateAsync('info.connection', false, true);
+                if (((error as AxiosError).response as any)?.error?.rspCode) {
+                    const response: ReolinkResponseError = (error as AxiosError).response?.data as ReolinkResponseError;
+                    this.log.error(`Cannot get local link: ${getReolinkErrorMessage(response.error.rspCode)}`);
+                }
                 this.apiConnected = false;
                 await this.setStateAsync('network.connected', {
                     val: this.apiConnected,
@@ -423,6 +512,7 @@ class ReoLinkCamAdapter extends Adapter {
             }
         }
     }
+
     async getPtzGuardInfo(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
@@ -436,6 +526,7 @@ class ReoLinkCamAdapter extends Adapter {
             }
         }
     }
+
     async getDriveInfo(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
@@ -477,7 +568,7 @@ class ReoLinkCamAdapter extends Adapter {
                             ack: true,
                         });
                     } else {
-                        //no sd card inserted
+                        // no sd card inserted
                         await this.setStateAsync('disc.capacity', { val: 0, ack: true });
                         await this.setStateAsync('disc.formatted', { val: false, ack: true });
                         await this.setStateAsync('disc.free', { val: 0, ack: true });
@@ -494,6 +585,7 @@ class ReoLinkCamAdapter extends Adapter {
             }
         }
     }
+
     async getLocalLink(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
@@ -539,6 +631,11 @@ class ReoLinkCamAdapter extends Adapter {
             } catch (error) {
                 this.apiConnected = false;
 
+                if ((error as AxiosError).response) {
+                    const response: ReolinkResponseError = (error as AxiosError).response?.data as ReolinkResponseError;
+                    this.log.error(`Cannot get local link: ${getReolinkErrorMessage(response.error.rspCode)}`);
+                }
+
                 await this.setStateAsync('network.connected', {
                     val: this.apiConnected,
                     ack: true,
@@ -548,6 +645,7 @@ class ReoLinkCamAdapter extends Adapter {
             }
         }
     }
+
     async getSnapshot(): Promise<{ type: string; base64: string } | null> {
         if (this.reolinkApiClient) {
             try {
@@ -689,6 +787,7 @@ class ReoLinkCamAdapter extends Adapter {
             await this.getAutoFocus();
         }
     }
+
     async getAutoFocus(): Promise<void> {
         if (this.reolinkApiClient) {
             try {
@@ -1260,6 +1359,7 @@ class ReoLinkCamAdapter extends Adapter {
             }
         }
     }
+
     async setMailNotification(state: 0 | 1 | 2): Promise<void> {
         if (state === 0 || state === 1) {
             const mail = await this.getStateAsync('RAW.Email');
