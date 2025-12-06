@@ -1458,7 +1458,7 @@
             }
         },
         {
-            "_id": "Command",
+            "_id": "command",
             "type": "channel",
             "common": {
                 "name": {
@@ -1478,7 +1478,7 @@
             "native": {}
         },
         {
-            "_id": "Command.Reboot",
+            "_id": "command.reboot",
             "type": "state",
             "common": {
                 "role": "button",

@@ -238,7 +238,7 @@ class ReoLinkCamAdapter extends Adapter {
         this.subscribeStates('settings.ptzEnableGuard');
         this.subscribeStates('settings.ptzCheck');
         this.subscribeStates('settings.ptzGuardTimeout');
-        this.subscribeStates('Command.Reboot');
+        this.subscribeStates('command.reboot');
         this.subscribeStates('ai_config.*');
     }
 
@@ -1507,8 +1507,8 @@ class ReoLinkCamAdapter extends Adapter {
                 } else if (propName === 'EmailNotification') {
                     await this.setMailNotification(parseInt(state.val as string, 10) as 0 | 1);
                 }
-                if (propName === 'Reboot') {
-                    // TODO: reboot command
+                if (propName === 'reboot') {
+                    await this.rebootCam();
                 }
             }
         } else {
