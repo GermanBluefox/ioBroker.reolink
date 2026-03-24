@@ -116,22 +116,22 @@ Battery cameras (Argus PT, Argus 3 Pro, ...) use a proprietary protocol and are 
 
 ### Battery Camera States
 
-| State | Type | R/W | Description |
-|---|---|---|---|
-| `streams.enable` | boolean | R/W | Start/stop RTSP stream |
-| `streams.mainStream` | string | R | RTSP URL for main stream |
-| `streams.subStream` | string | R | RTSP URL for sub stream |
-| `mqtt.enable` | boolean | R/W | Start/stop MQTT integration |
-| `floodlight` | boolean | R/W | Floodlight on/off — status via MQTT, control via MQTT (auto-starts MQTT) |
-| `pir` | boolean | R/W | PIR sensor on/off — status via MQTT, control via MQTT (auto-starts MQTT) |
-| `snapshot` | button | W | Capture snapshot via RTSP |
-| `query.battery` | button | W | Query battery level via neolink CLI |
-| `query.preview` | button | W | Capture snapshot via RTSP |
-| `ptz.preset` | number | R/W | Move camera to saved preset position (0–9) |
-| `ptz.up/down/left/right` | boolean | R/W | Hold-to-move (`true`=start, `false`=stop) |
-| `ptz.speed` | number | R/W | PTZ movement speed (1–100, default 32) |
-| `status.motion` | boolean | R | Motion detected (via MQTT) |
-| `status.battery_level` | number | R | Battery level in % (via neolink CLI, periodic) |
+| State                    | Type    | R/W | Description                                                              |
+|--------------------------|---------|-----|--------------------------------------------------------------------------|
+| `streams.enable`         | boolean | R/W | Start/stop RTSP stream                                                   |
+| `streams.mainStream`     | string  | R   | RTSP URL for main stream                                                 |
+| `streams.subStream`      | string  | R   | RTSP URL for sub stream                                                  |
+| `mqtt.enable`            | boolean | R/W | Start/stop MQTT integration                                              |
+| `floodlight`             | boolean | R/W | Floodlight on/off — status via MQTT, control via MQTT (auto-starts MQTT) |
+| `pir`                    | boolean | R/W | PIR sensor on/off — status via MQTT, control via MQTT (auto-starts MQTT) |
+| `snapshot`               | button  | W   | Capture snapshot via RTSP                                                |
+| `query.battery`          | button  | W   | Query battery level via neolink CLI                                      |
+| `query.preview`          | button  | W   | Capture snapshot via RTSP                                                |
+| `ptz.preset`             | number  | R/W | Move camera to saved preset position (0–9)                               |
+| `ptz.up/down/left/right` | boolean | R/W | Hold-to-move (`true`=start, `false`=stop)                                |
+| `ptz.speed`              | number  | R/W | PTZ movement speed (1–100, default 32)                                   |
+| `status.motion`          | boolean | R   | Motion detected (via MQTT)                                               |
+| `status.battery_level`   | number  | R   | Battery level in % (via neolink CLI, periodic)                           |
 
 | `snapshotImage` | string | R | Last snapshot image (base64, data URI) |
 | `snapshotStatus` | string | R | Snapshot status: `idle` / `capturing` / `success` / `error` |
