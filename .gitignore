@@ -17,3 +17,8 @@ admin/i18n/flat.txt
 admin/i18n/*/flat.txt
 #ignore .commitinfo created by ioBroker release script
 .commitinfo
+
+# Neolink binaries — downloaded automatically at runtime, not bundled (AGPL-3.0)
+lib/neolink
+lib/neolink.exe
+lib/*.zip
