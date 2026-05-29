@@ -231,6 +231,10 @@ RLC-420-5MP, E1 Zoom, RLC-522, RLC-810A, RLC-823A, Duo 3 PoE
 
 Reolink Argus PT, Reolink Argus 3 Pro  
 
+### Doorbells (HTTP API + ONVIF ring detection)
+
+Reolink Video Doorbell PoE (D340P)  
+
 ---
 
 ## Changelog
@@ -264,7 +268,7 @@ Reolink Argus PT, Reolink Argus 3 Pro
 
 ### 1.2.2 (2025-05-01)
 * (oelison) update readme #141 #155
-* (oelison) supress errors with axios timeout #154
+* (oelison) suppress errors with axios timeout #154
 
 ### 1.2.1 (2025-02-09)
 * (oelison) set some errors to debug logs
@@ -286,7 +290,7 @@ Reolink Argus PT, Reolink Argus 3 Pro
 
 ### 1.1.0 (2024-05-16)
 * (Nibbels) [#56](https://github.com/aendue/ioBroker.reolink/issues/56) added function to switch scheduled recording on and off
-* (Nibbels) [#25](https://github.com/aendue/ioBroker.reolink/issues/25) detach led light from led light mode
+* (Nibbels) [#25](https://github.com/aendue/ioBroker.reolink/issues/25) detach LED light from LED light mode
 * (Nibbels) added setWhiteLedMode function
 * (Nibbels) read zoom and focus with POST request (works on RLC-823A v3.1)
 * (oelison) removed node 16
