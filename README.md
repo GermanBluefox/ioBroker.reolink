@@ -185,16 +185,40 @@ Control topics (published by adapter to camera):
 
 ### Troubleshooting
 
-| Problem | Solution |
-|---|---|
-| "Camera UID required" | Enter UID from Reolink app → Device Info |
-| "libgstrtspserver not found" | `sudo apt install gstreamer1.0-rtsp` |
-| Stream won't connect | Enable `streams.enable`, wait ~5 s for neolink to start |
-| Snapshot fails | Install ffmpeg: `sudo apt install ffmpeg` |
-| Floodlight/PIR doesn't react | MQTT starts automatically — wait ~3 s after toggling |
-| MQTT `NotAuthorized` | Check broker credentials; neolink uses `credentials = ["user", "pass"]` format |
-| Battery drains fast | Disable streaming when not in use; use MQTT only for motion |
-| PTZ unresponsive | Each PTZ command needs ~2 s (P2P camera login) — this is normal |
+| Problem                      | Solution                                                                       |
+|------------------------------|--------------------------------------------------------------------------------|
+| "Camera UID required"        | Enter UID from Reolink app → Device Info                                       |
+| "libgstrtspserver not found" | `sudo apt install gstreamer1.0-rtsp`                                           |
+| Stream won't connect         | Enable `streams.enable`, wait ~5 s for neolink to start                        |
+| Snapshot fails               | Install ffmpeg: `sudo apt install ffmpeg`                                      |
+| Floodlight/PIR doesn't react | MQTT starts automatically — wait ~3 s after toggling                           |
+| MQTT `NotAuthorized`         | Check broker credentials; neolink uses `credentials = ["user", "pass"]` format |
+| Battery drains fast          | Disable streaming when not in use; use MQTT only for motion                    |
+| PTZ unresponsive             | Each PTZ command needs ~2 s (P2P camera login) — this is normal                |
+
+## Doorbell Cameras
+
+Wired Reolink doorbells use the standard HTTP API plus ONVIF for ring detection. Enable **"Doorbell camera"** in the adapter config to add doorbell-specific states. (This is independent of the battery-camera option.)
+
+| State                       | Type    | R/W | Description                                                                         |
+|-----------------------------|---------|-----|-------------------------------------------------------------------------------------|
+| `sensor.visitor.state`      | boolean | R   | Doorbell button pressed (ring) — delivered via ONVIF event (auto-clears after 10 s) |
+| `sensor.visitor.support`    | boolean | R   | Whether the camera reports a `visitor` AI type via HTTP (model-dependent)           |
+| `doorbell.audioFileList`    | string  | R   | JSON list of stored audio files (`id`, `fileName`, ...) for quick/auto reply        |
+| `doorbell.quickReplyPlay`   | number  | W   | Write an audio file `id` to make the doorbell play that message                     |
+| `doorbell.autoReplyEnabled` | boolean | R/W | Enable/disable automatic reply when the doorbell rings                              |
+| `doorbell.autoReplyFileId`  | number  | R/W | Audio file `id` played as auto reply (see `doorbell.audioFileList`)                 |
+| `doorbell.autoReplyTimeout` | number  | R/W | Seconds after the ring before the auto reply is triggered                           |
+
+Look up the available file ids in `doorbell.audioFileList`, then use that id for `doorbell.quickReplyPlay` or `doorbell.autoReplyFileId`.
+
+### Ring detection (ONVIF)
+
+On most Reolink doorbells the button press is **not** available through the HTTP polling API (`GetAiState` has no `visitor` field). The adapter therefore opens an **ONVIF PullPoint subscription** and listens for the `visitor` event — when someone rings, `sensor.visitor.state` is set to `true` (and auto-clears after 10 s). React to that state change in your scripts/automations.
+
+- Requires **ONVIF enabled** on the camera (Reolink app → Settings → Network → Advanced → ONVIF).
+- Set the **ONVIF Port** in the adapter config (Reolink default: `8000`).
+- No inbound port / webhook on the ioBroker host is needed — the adapter long-polls the camera.
 
 ---
 
@@ -214,6 +238,9 @@ Reolink Argus PT, Reolink Argus 3 Pro
     Placeholder for the next version (at the beginning of the line):
     ### **WORK IN PROGRESS**
 -->
+### **WORK IN PROGRESS**
+* (@GermanBluefox) Doorbell support: ring detection via ONVIF events (`sensor.visitor.state`), quick reply and auto reply (enable via "Doorbell camera" in config; requires ONVIF enabled on the camera)
+
 ### 1.4.2 (2026-03-16)
 * (oelison) fast fix for issue #230
 
