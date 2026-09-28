@@ -184,6 +184,9 @@ class ReoLinkCamAdapter extends Adapter {
             return;
         }
 
+        // Remove states written by older adapter versions that never had an object
+        await this.cleanupOrphanedStates();
+
         // Check if this is a battery-powered camera
         if (this.config.isBatteryCam) {
             this.log.info('Battery-powered camera detected - using neolink');
@@ -246,11 +249,6 @@ class ReoLinkCamAdapter extends Adapter {
         await this.getRecording();
 
         this.log.debug('getStateAsync start Email notification');
-        //create state dynamically
-        const state = await this.getStateAsync('device.name');
-        if (state) {
-            await this.setState('Device.Name', state.val);
-        }
         await this.getMailNotification();
         this.subscribeStates('settings.EmailNotification');
         this.log.debug('Email notification subscribed');
@@ -3136,6 +3134,30 @@ class ReoLinkCamAdapter extends Adapter {
         });
 
         this.log.debug('Doorbell states created');
+    }
+
+    /**
+     * Delete orphaned states left behind by older adapter versions.
+     *
+     * Up to v1.4.2 onReady() copied `device.name` into `Device.Name`, an id that was never
+     * declared as an object. js-controller writes such a state anyway and warns about it
+     * ("has no existing object"), so the value lingers in the states DB. Remove it.
+     */
+    private async cleanupOrphanedStates(): Promise<void> {
+        for (const id of ['Device.Name']) {
+            try {
+                if (await this.getStateAsync(id)) {
+                    await this.delStateAsync(id);
+                    this.log.debug(`Deleted orphaned state: ${id}`);
+                }
+                const obj = await this.getObjectAsync(id);
+                if (obj) {
+                    await this.delObjectAsync(id);
+                }
+            } catch {
+                // Ignore - state/object might not exist
+            }
+        }
     }
 
     /**
